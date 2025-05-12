@@ -19,7 +19,8 @@ app.post("/songs", (req, res) => {
 });
 
 app.get("/songs", (req, res) => {
-  res.json(songs.getSongs());
+  const allSongs = songs.getSongs();
+  res.json(allSongs);
 });
 
 app.listen(PORT, () => {
