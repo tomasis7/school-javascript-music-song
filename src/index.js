@@ -50,6 +50,13 @@ app.put("/songs/:title", (req, res) => {
   res.json(updatedSong);
 });
 
+const playlists = require("./playlists");
+
+app.get("/playlists", (req, res) => {
+  const allPlaylists = playlists.listPlaylists();
+  res.json(allPlaylists);
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
