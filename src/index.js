@@ -23,6 +23,15 @@ app.get("/songs", (req, res) => {
   res.json(allSongs);
 });
 
+app.delete("/songs/:title", (req, res) => {
+  const { title } = req.params;
+  const deletedSong = songs.deleteSong(title);
+  if (!deletedSong) {
+    return res.status(404).json({ error: "Song not found." });
+  }
+  res.json(deletedSong);
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
