@@ -22,8 +22,17 @@ function deleteSong(title) {
   return null;
 }
 
+function updateSong(title, newDetails) {
+  const song = songs.find((song) => song.title === title);
+  if (!song) return null;
+
+  Object.assign(song, newDetails);
+  return song;
+}
+
 module.exports = {
   addSong,
   getSongs,
   deleteSong,
+  updateSong,
 };
