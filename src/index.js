@@ -32,6 +32,24 @@ app.delete("/songs/:title", (req, res) => {
   res.json(deletedSong);
 });
 
+app.put("/songs/:title", (req, res) => {
+  const { title } = req.params;
+  const newDetails = req.body;
+
+  if (!newDetails.title && !newDetails.artist && !newDetails.genre) {
+    return res
+      .status(400)
+      .json({ error: "At least one field must be updated." });
+  }
+
+  const updatedSong = songs.updateSong(title, newDetails);
+  if (!updatedSong) {
+    return res.status(404).json({ error: "Song not found." });
+  }
+
+  res.json(updatedSong);
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
