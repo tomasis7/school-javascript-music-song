@@ -1,7 +1,8 @@
 {
-  "name": "vite-project",
+  "name": "music-playlist-app",
+  "description": "A music playlist application that manages playlists categorized by genre, artist, and songs.",
+  "version": "1.0.0",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,5 +11,8 @@
   },
   "devDependencies": {
     "vite": "^6.3.5"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
   }
 }
