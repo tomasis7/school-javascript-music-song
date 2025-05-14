@@ -18,6 +18,15 @@ app.post("/songs", (req, res) => {
   res.status(201).json(song);
 });
 
+app.post("/playlists", (req, res) => {
+  const { name } = req.body;
+  if (!name) {
+    return res.status(400).json({ error: "Playlist name is required." });
+  }
+  const playlist = playlists.createPlaylist(name);
+  res.status(201).json(playlist);
+});
+
 app.get("/songs", (req, res) => {
   const allSongs = songs.getSongs();
   res.json(allSongs);
