@@ -27,6 +27,26 @@ app.post("/playlists", (req, res) => {
   res.status(201).json(playlist);
 });
 
+app.post("/playlists/:name/songs", (req, res) => {
+  const { name } = req.params;
+  const { title, artist, genre } = req.body;
+
+  if (!title || !artist || !genre) {
+    return res
+      .status(400)
+      .json({ error: "Title, artist, and genre are required." });
+  }
+
+  const song = { title, artist, genre };
+  const updatedPlaylist = playlists.addSongToPlaylist(name, song);
+
+  if (!updatedPlaylist) {
+    return res.status(404).json({ error: "Playlist not found." });
+  }
+
+  res.status(201).json(updatedPlaylist);
+});
+
 app.get("/songs", (req, res) => {
   const allSongs = songs.getSongs();
   res.json(allSongs);
