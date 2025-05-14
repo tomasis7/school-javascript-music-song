@@ -19,8 +19,22 @@ function addSongToPlaylist(playlistName, song) {
   return playlist;
 }
 
+function removedSongFromPlaylist(playlistName, songTitle) {
+  const playlist = playlists.find((p) => p.name === playlistName);
+  if (!playlist) {
+    return null;
+  }
+  const songIndex = playlist.songs.findIndex((s) => s.title === songTitle);
+  if (songIndex === -1) {
+    return null;
+  }
+  // const removedSong = playlist.songs.splice(songIndex, 1);
+  // return removedSong[0];
+}
+
 module.exports = {
   createPlaylist,
   listPlaylists,
   addSongToPlaylist,
+  removedSongFromPlaylist,
 };

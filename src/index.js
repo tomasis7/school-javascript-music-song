@@ -61,6 +61,15 @@ app.delete("/songs/:title", (req, res) => {
   res.json(deletedSong);
 });
 
+app.delete("/playlists/:name/songs/:title", (req, res) => {
+  const { name, title } = req.params;
+  const removedSong = playlists.removedSongFromPlaylist(name, title);
+  if (!removedSong) {
+    return res.status(404).json({ error: "Playlist or song not found." });
+  }
+  res.json(removedSong);
+});
+
 app.put("/songs/:title", (req, res) => {
   const { title } = req.params;
   const newDetails = req.body;
