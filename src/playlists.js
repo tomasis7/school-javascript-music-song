@@ -32,9 +32,15 @@ function removedSongFromPlaylist(playlistName, songTitle) {
   // return removedSong[0];
 }
 
+function getSongsFromPlaylist(playlistId) {
+  const playlist = playlists.find((p) => p.id === playlistId);
+  return playlist ? playlist.songs : null;
+}
+
 module.exports = {
   createPlaylist,
   listPlaylists,
   addSongToPlaylist,
   removedSongFromPlaylist,
+  getSongsFromPlaylist,
 };

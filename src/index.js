@@ -47,11 +47,6 @@ app.post("/playlists/:name/songs", (req, res) => {
   res.status(201).json(updatedPlaylist);
 });
 
-app.get("/songs", (req, res) => {
-  const allSongs = songs.getSongs();
-  res.json(allSongs);
-});
-
 app.delete("/songs/:title", (req, res) => {
   const { title } = req.params;
   const deletedSong = songs.deleteSong(title);
@@ -93,6 +88,20 @@ const playlists = require("./playlists");
 app.get("/playlists", (req, res) => {
   const allPlaylists = playlists.listPlaylists();
   res.json(allPlaylists);
+});
+
+app.get("/songs", (req, res) => {
+  const allSongs = songs.getSongs();
+  res.json(allSongs);
+});
+
+app.get("/playlists/:id/songs", (req, res) => {
+  const playlistId = parseInt(req.params.id, 10);
+  const songsInPlaylist = playlists.getSongsFromPlaylist(playlistId);
+  if (!songsInPlaylist) {
+    return res.status(404).json({ error: "Playlist not found." });
+  }
+  res.json(songsInPlaylist);
 });
 
 app.listen(PORT, () => {
