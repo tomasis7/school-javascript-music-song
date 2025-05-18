@@ -1,12 +1,23 @@
 document.addEventListener("DOMContentLoaded", () => {
   const filterInput = document.getElementById("playlist-filter");
   const sortSelect = document.getElementById("playlist-sort");
+  const groupBySelect = document.getElementById("group-by");
+
   const refresh = () =>
     loadPlaylists(filterInput.value.trim(), sortSelect.value);
 
+  // Add the event listener for group-by changes
+  groupBySelect.addEventListener("change", function () {
+    currentGrouping = this.value;
+    fetchAndDisplaySongs();
+  });
+
   filterInput.addEventListener("input", refresh);
   sortSelect.addEventListener("change", refresh);
+
+  // Load playlists and songs on page load
   refresh();
+  fetchAndDisplaySongs();
 });
 
 function loadPlaylists(filter = "", sortKey = "name") {
@@ -144,11 +155,9 @@ function attachPlaylistActions(li, pl) {
       .then((upd) => {
         li.firstChild.textContent = `${upd.name} (${pl.songCount} songs, ${pl.totalDuration} min)`;
 
-        // Update the playlist object reference
         const oldName = pl.name;
         pl.name = upd.name;
 
-        // If this is the currently loaded playlist, update its name
         if (window.currentPlaylist === oldName) {
           window.currentPlaylist = upd.name;
           document.getElementById("title").textContent = upd.name;
@@ -259,69 +268,170 @@ function loadDetails(playlistName) {
     .catch(console.error);
 }
 
-function displaySongsByGroup(songs, groupBy) {
-  const groupsDiv = document.getElementById("groups");
-  groupsDiv.innerHTML = "";
+let currentGrouping = "genre";
 
-  if (!Array.isArray(songs)) {
-    console.error("Expected songs to be an array but got:", songs);
-    groupsDiv.innerHTML = "<p>Error: Invalid song data received</p>";
+document.getElementById("group-by").addEventListener("change", function () {
+  currentGrouping = this.value;
+  fetchAndDisplaySongs();
+});
+
+function fetchAndDisplaySongs() {
+  fetch("/songs") // Change from '/api/songs' to '/songs'
+    .then((response) => response.json())
+    .then((songs) => {
+      displaySongsByGroup(songs, currentGrouping);
+    })
+    .catch((error) => {
+      console.error("Error fetching songs:", error);
+      document.getElementById("song-list").innerHTML =
+        '<li class="empty-message">Error loading songs. Please try again.</li>';
+    });
+}
+
+function displaySongsByGroup(songs, groupBy) {
+  const songList = document.getElementById("song-list");
+  songList.innerHTML = "";
+
+  if (!songs || songs.length === 0) {
+    songList.innerHTML = '<li class="empty-message">No songs available</li>';
     return;
   }
 
-  const groups = {};
+  const groupedSongs = {};
+
   songs.forEach((song) => {
-    const key = song[groupBy] || "Unknown";
-    if (!groups[key]) {
-      groups[key] = [];
+    let groupKey;
+
+    if (groupBy === "genre") {
+      groupKey = song.genre || "Unknown Genre";
+    } else if (groupBy === "artist") {
+      groupKey = song.artist || "Unknown Artist";
+    } else if (groupBy === "title") {
+      groupKey = song.title.charAt(0).toUpperCase() || "#";
+      if (!/[A-Z]/.test(groupKey)) {
+        groupKey = "#";
+      }
     }
-    groups[key].push(song);
+
+    if (!groupedSongs[groupKey]) {
+      groupedSongs[groupKey] = [];
+    }
+
+    groupedSongs[groupKey].push(song);
   });
 
-  const sortedKeys = Object.keys(groups).sort();
+  const sortedGroups = Object.keys(groupedSongs).sort();
 
-  sortedKeys.forEach((key) => {
-    const groupSection = document.createElement("section");
-    groupSection.className = "song-group";
+  sortedGroups.forEach((group) => {
+    const groupHeader = document.createElement("li");
+    groupHeader.className = "group-header";
+    groupHeader.textContent = group;
+    songList.appendChild(groupHeader);
 
-    const groupTitle = document.createElement("h3");
-    groupTitle.textContent = key;
-    groupSection.appendChild(groupTitle);
+    groupedSongs[group].forEach((song) => {
+      const songItem = document.createElement("li");
+      songItem.className = "song-item";
 
-    const songsList = document.createElement("ul");
-    songsList.className = "songs-in-group";
+      const songText = document.createElement("div");
+      songText.className = "song-info";
+      songText.innerHTML = `
+        <span class="song-title">${song.title}</span> - 
+        <span class="song-artist">${song.artist}</span> 
+        (<span class="song-genre">${song.genre}</span>)
+      `;
 
-    groups[key]
-      .sort((a, b) => a.title.localeCompare(b.title))
-      .forEach((song) => {
-        const li = document.createElement("li");
-        li.textContent = `${song.title} – ${song.artist} [${song.genre}]`;
-        attachSongActions(li, song);
-        songsList.appendChild(li);
-      });
+      const actionDiv = document.createElement("div");
+      actionDiv.className = "song-actions";
 
-    groupSection.appendChild(songsList);
-    groupsDiv.appendChild(groupSection);
-  });
+      // Create edit button
+      const editBtn = document.createElement("button");
+      editBtn.textContent = "✏️";
+      editBtn.className = "edit-song";
+      editBtn.onclick = () => {
+        const title = prompt("New title:", song.title);
+        const artist = prompt("New artist:", song.artist);
+        const genre = prompt("New genre:", song.genre);
 
-  if (window.Sortable) {
-    document.querySelectorAll(".songs-in-group").forEach((list) => {
-      new Sortable(list, {
-        animation: 150,
-        ghostClass: "sortable-ghost",
-        onEnd: function () {},
-      });
+        if (!title && !artist && !genre) return;
+
+        fetch(`/songs/${encodeURIComponent(song.title)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, artist, genre }),
+        })
+          .then((r) => r.json())
+          .then(() => fetchAndDisplaySongs())
+          .catch(console.error);
+      };
+
+      // Create delete button
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "🗑️";
+      delBtn.className = "delete-song";
+      delBtn.onclick = () => {
+        if (confirm(`Delete song "${song.title}"?`)) {
+          fetch(`/songs/${encodeURIComponent(song.title)}`, {
+            method: "DELETE",
+          })
+            .then((r) => {
+              if (r.ok) fetchAndDisplaySongs();
+            })
+            .catch(console.error);
+        }
+      };
+
+      // Create add to playlist select and button
+      const playlistSelect = document.createElement("select");
+      const placeholderOpt = document.createElement("option");
+      placeholderOpt.textContent = "-- Add to playlist --";
+      placeholderOpt.disabled = true;
+      placeholderOpt.selected = true;
+      playlistSelect.appendChild(placeholderOpt);
+
+      fetch("/playlists")
+        .then((r) => r.json())
+        .then((pls) => {
+          pls.forEach((pl) => {
+            const opt = document.createElement("option");
+            opt.value = pl.name;
+            opt.textContent = pl.name;
+            playlistSelect.appendChild(opt);
+          });
+        })
+        .catch(console.error);
+
+      const addBtn = document.createElement("button");
+      addBtn.textContent = "➕";
+      addBtn.onclick = () => {
+        const selected = playlistSelect.value;
+        if (!selected) return alert("Please select a playlist");
+
+        fetch(`/playlists/${encodeURIComponent(selected)}/songs`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(song),
+        })
+          .then((r) => r.json())
+          .then(() => {
+            alert(`"${song.title}" added to "${selected}"`);
+            if (window.currentPlaylist === selected) {
+              loadDetails(selected);
+            }
+          })
+          .catch(console.error);
+      };
+
+      // Add all elements to the song item
+      actionDiv.appendChild(editBtn);
+      actionDiv.appendChild(delBtn);
+      actionDiv.appendChild(playlistSelect);
+      actionDiv.appendChild(addBtn);
+
+      songItem.appendChild(songText);
+      songItem.appendChild(actionDiv);
+      songList.appendChild(songItem);
     });
-  }
+  });
 }
 
-document.getElementById("group-by").addEventListener("change", function () {
-  if (window.currentPlaylist) {
-    fetch(`/playlists/${encodeURIComponent(window.currentPlaylist)}/songs`)
-      .then((r) => r.json())
-      .then((songs) => {
-        displaySongsByGroup(songs, this.value);
-      })
-      .catch(console.error);
-  }
-});
+document.getElementById("song-list").innerHTML = "";

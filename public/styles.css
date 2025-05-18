@@ -62,3 +62,43 @@ h3 {
   color: green;
   font-size: 0.9em;
 }
+
+.group-header {
+  background-color: #f0f0f0;
+  padding: 8px 12px;
+  font-weight: bold;
+  margin-top: 15px;
+  border-radius: 4px;
+  list-style-type: none;
+}
+
+.song-item {
+  padding: 8px 12px;
+  margin: 4px 0;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  list-style-type: none;
+}
+
+.song-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.song-info {
+  flex: 1;
+}
+
+.empty-message {
+  color: #666;
+  font-style: italic;
+  padding: 20px;
+  text-align: center;
+  list-style-type: none;
+}
+
+#song-list {
+  padding: 0;
+}
