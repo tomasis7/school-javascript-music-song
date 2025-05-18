@@ -126,19 +126,38 @@ function attachSongActions(li, song) {
 function attachPlaylistActions(li, pl) {
   const edit = document.createElement("button");
   edit.textContent = "✏️";
-  edit.onclick = () => {
+  edit.onclick = (event) => {
+    event.stopPropagation();
+
     const newName = prompt("Rename playlist:", pl.name);
+    if (!newName || newName === pl.name) return;
+
     fetch(`/playlists/${encodeURIComponent(pl.name)}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ newName }),
     })
-      .then((r) => r.json())
-      .then((upd) => {
-        li.firstChild.textContent = upd.name;
-        pl.name = upd.name;
+      .then((r) => {
+        if (!r.ok) throw new Error(`Server error: ${r.status}`);
+        return r.json();
       })
-      .catch(console.error);
+      .then((upd) => {
+        li.firstChild.textContent = `${upd.name} (${pl.songCount} songs, ${pl.totalDuration} min)`;
+
+        // Update the playlist object reference
+        const oldName = pl.name;
+        pl.name = upd.name;
+
+        // If this is the currently loaded playlist, update its name
+        if (window.currentPlaylist === oldName) {
+          window.currentPlaylist = upd.name;
+          document.getElementById("title").textContent = upd.name;
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to update playlist:", err);
+        alert("Failed to update playlist. Please try again.");
+      });
   };
 
   const del = document.createElement("button");
@@ -220,7 +239,16 @@ function loadDetails(playlistName) {
 
       fetch(`/playlists/${encodeURIComponent(playlistName)}/songs`)
         .then((r) => r.json())
-        .then((songs) => {
+        .then((songsData) => {
+          const songs = Array.isArray(songsData) ? songsData : [];
+
+          if (!Array.isArray(songsData)) {
+            console.warn(
+              "Expected array from /songs endpoint but got:",
+              songsData
+            );
+          }
+
           displaySongsByGroup(songs, document.getElementById("group-by").value);
         })
         .catch((err) => {
@@ -234,6 +262,12 @@ function loadDetails(playlistName) {
 function displaySongsByGroup(songs, groupBy) {
   const groupsDiv = document.getElementById("groups");
   groupsDiv.innerHTML = "";
+
+  if (!Array.isArray(songs)) {
+    console.error("Expected songs to be an array but got:", songs);
+    groupsDiv.innerHTML = "<p>Error: Invalid song data received</p>";
+    return;
+  }
 
   const groups = {};
   songs.forEach((song) => {
