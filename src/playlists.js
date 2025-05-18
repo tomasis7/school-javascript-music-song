@@ -1,18 +1,52 @@
-const playlists = [];
+const fs = require("fs");
+const path = require("path");
+
+let playlists = [];
+const playlistsFilePath = path.join(__dirname, "../public/playlists.json");
+
+try {
+  const data = fs.readFileSync(playlistsFilePath, "utf8");
+  playlists = JSON.parse(data);
+} catch (err) {
+  console.error("Error loading playlists file:", err);
+  playlists = [];
+}
+
+function savePlaylists() {
+  const safeList = playlists.map((p) => ({
+    name: p.name,
+    songCount: p.songs ? p.songs.length : 0,
+    totalDuration: p.songs
+      ? p.songs.reduce((sum, s) => sum + (s.duration || 0), 0)
+      : 0,
+    dateCreated: p.dateCreated,
+  }));
+
+  fs.writeFileSync(playlistsFilePath, JSON.stringify(safeList, null, 2));
+}
 
 function createPlaylist(name) {
   const now = new Date().toISOString();
-  const pl = { name, songs: [], createdAt: now };
+  const pl = {
+    name,
+    songs: [],
+    songCount: 0,
+    totalDuration: 0,
+    dateCreated: now,
+  };
   playlists.push(pl);
+  savePlaylists();
   return pl;
 }
 
 function listPlaylists() {
   return playlists.map((p) => ({
     name: p.name,
-    songCount: p.songs.length,
-    totalDuration: p.songs.reduce((sum, s) => sum + (s.duration || 0), 0),
-    dateCreated: p.createdAt,
+    songCount: p.songs ? p.songs.length : 0,
+    totalDuration: p.songs
+      ? p.songs.reduce((sum, s) => sum + (s.duration || 0), 0)
+      : 0,
+    dateCreated: p.dateCreated,
   }));
 }
 
@@ -21,7 +55,15 @@ function addSongToPlaylist(playlistName, song) {
   if (!playlist) {
     return null;
   }
+
+  if (!playlist.songs) {
+    playlist.songs = [];
+  }
+
   playlist.songs.push(song);
+
+  playlist.songCount = playlist.songs.length;
+  savePlaylists();
   return playlist;
 }
 
@@ -34,10 +76,13 @@ function removedSongFromPlaylist(playlistName, songTitle) {
   if (songIndex === -1) {
     return null;
   }
+  const removedSong = playlist.songs.splice(songIndex, 1)[0];
+  savePlaylists();
+  return removedSong;
 }
 
-function getSongsFromPlaylist(playlistId) {
-  const playlist = playlists.find((p) => p.id === playlistId);
+function getSongsFromPlaylist(playlistName) {
+  const playlist = playlists.find((p) => p.name === playlistName);
   return playlist ? playlist.songs : null;
 }
 
@@ -50,6 +95,7 @@ function updatePlaylist(oldName, newName) {
   const pl = playlists.find((p) => p.name === oldName);
   if (!pl) return null;
   pl.name = newName;
+  savePlaylists();
   return pl;
 }
 

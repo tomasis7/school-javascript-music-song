@@ -60,14 +60,21 @@ app.post("/playlists/:name/songs", (req, res) => {
       .json({ error: "Title, artist, and genre are required." });
   }
 
-  const song = { title, artist, genre };
-  const updatedPlaylist = playlists.addSongToPlaylist(name, song);
+  try {
+    const song = { title, artist, genre };
+    const updatedPlaylist = playlists.addSongToPlaylist(name, song);
 
-  if (!updatedPlaylist) {
-    return res.status(404).json({ error: "Playlist not found." });
+    if (!updatedPlaylist) {
+      return res.status(404).json({ error: "Playlist not found." });
+    }
+
+    res.status(201).json(updatedPlaylist);
+  } catch (error) {
+    console.error("Error adding song to playlist:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to add song to playlist: " + error.message });
   }
-
-  res.status(201).json(updatedPlaylist);
 });
 
 app.post("/genres", (req, res) => {
@@ -116,7 +123,6 @@ app.delete("/playlists/:name", (req, res) => {
   const removed = playlists.deletePlaylist(name);
   if (!removed) return res.status(404).json({ error: "Playlist not found." });
 
-  // Persist
   const fp = path.join(__dirname, "../public/playlists.json");
   fs.writeFile(
     fp,
@@ -158,7 +164,6 @@ app.put("/playlists/:name", (req, res) => {
     return res.status(404).json({ error: "Playlist not found" });
   }
 
-  // Save changes to the playlists.json file
   const fp = path.join(__dirname, "../public/playlists.json");
   fs.writeFile(
     fp,
@@ -191,6 +196,15 @@ app.get("/songs", (req, res) => {
 app.get("/playlists/:id/songs", (req, res) => {
   const playlistId = parseInt(req.params.id, 10);
   const songsInPlaylist = playlists.getSongsFromPlaylist(playlistId);
+  if (!songsInPlaylist) {
+    return res.status(404).json({ error: "Playlist not found." });
+  }
+  res.json(songsInPlaylist);
+});
+
+app.get("/playlists/:name/songs", (req, res) => {
+  const playlistName = req.params.name;
+  const songsInPlaylist = playlists.getSongsFromPlaylist(playlistName);
   if (!songsInPlaylist) {
     return res.status(404).json({ error: "Playlist not found." });
   }

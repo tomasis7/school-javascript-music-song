@@ -103,10 +103,14 @@ function attachSongActions(li, song) {
       body: JSON.stringify(song),
     })
       .then((r) => {
-        if (!r.ok) throw new Error("Failed to add song to playlist");
+        if (!r.ok) {
+          return r.json().then((err) => {
+            throw new Error(err.error || "Failed to add song to playlist");
+          });
+        }
         return r.json();
       })
-      .then(() => {
+      .then((updatedPlaylist) => {
         alert(`"${song.title}" added to "${selected}"`);
 
         const filterInput = document.getElementById("playlist-filter");
@@ -117,7 +121,12 @@ function attachSongActions(li, song) {
           loadDetails(selected);
         }
       })
-      .catch(console.error);
+      .catch((error) => {
+        console.error("Error adding song to playlist:", error);
+        alert(
+          error.message || "Failed to add song to playlist. Please try again."
+        );
+      });
   };
 
   li.append(" ", playlistSelect, " ", addBtn);
@@ -144,20 +153,14 @@ function attachPlaylistActions(li, pl) {
       .then((upd) => {
         li.firstChild.textContent = `${upd.name} (${pl.songCount} songs, ${pl.totalDuration} min)`;
 
-        // Update the playlist object reference
-        const oldName = pl.name;
-        pl.name = upd.name;
-
-        // If this is the currently loaded playlist, update its name
-        if (window.currentPlaylist === oldName) {
+        if (window.currentPlaylist === pl.name) {
           window.currentPlaylist = upd.name;
           document.getElementById("title").textContent = upd.name;
         }
+
+        pl.name = upd.name;
       })
-      .catch((err) => {
-        console.error("Failed to update playlist:", err);
-        alert("Failed to update playlist. Please try again.");
-      });
+      .catch(console.error);
   };
 
   const del = document.createElement("button");
@@ -193,7 +196,7 @@ document.getElementById("create-playlist").addEventListener("click", () => {
       document.getElementById("playlist-list").appendChild(li);
       nameInput.value = "";
     })
-    .catch(console.error);
+    .catch((error) => handleFetchError(error, "Failed to create playlist"));
 });
 
 document.getElementById("add-song").addEventListener("click", () => {
@@ -228,35 +231,19 @@ function loadDetails(playlistName) {
   const groupsDiv = document.getElementById("groups");
   groupsDiv.innerHTML = "";
 
-  fetch("/playlists")
+  fetch(`/playlists/${encodeURIComponent(playlistName)}/songs`)
     .then((r) => r.json())
-    .then((playlists) => {
-      const playlist = playlists.find((p) => p.name === playlistName);
-      if (!playlist) {
-        groupsDiv.innerHTML = "<p>Playlist not found</p>";
-        return;
+    .then((songs) => {
+      if (!Array.isArray(songs)) {
+        console.warn("Expected array from songs endpoint but got:", songs);
+        songs = [];
       }
-
-      fetch(`/playlists/${encodeURIComponent(playlistName)}/songs`)
-        .then((r) => r.json())
-        .then((songsData) => {
-          const songs = Array.isArray(songsData) ? songsData : [];
-
-          if (!Array.isArray(songsData)) {
-            console.warn(
-              "Expected array from /songs endpoint but got:",
-              songsData
-            );
-          }
-
-          displaySongsByGroup(songs, document.getElementById("group-by").value);
-        })
-        .catch((err) => {
-          console.error("Error loading playlist songs:", err);
-          groupsDiv.innerHTML = "<p>Error loading songs</p>";
-        });
+      displaySongsByGroup(songs, document.getElementById("group-by").value);
     })
-    .catch(console.error);
+    .catch((err) => {
+      console.error("Error loading playlist songs:", err);
+      groupsDiv.innerHTML = "<p>Error loading songs</p>";
+    });
 }
 
 function displaySongsByGroup(songs, groupBy) {
@@ -325,3 +312,8 @@ document.getElementById("group-by").addEventListener("change", function () {
       .catch(console.error);
   }
 });
+
+function handleFetchError(error, message = "Operation failed") {
+  console.error(`${message}:`, error);
+  alert(`${message}. Please try again.`);
+}
