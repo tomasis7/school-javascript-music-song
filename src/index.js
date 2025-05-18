@@ -111,8 +111,6 @@ app.put("/songs/:title", (req, res) => {
   res.json(updatedSong);
 });
 
-const playlists = require("./playlists");
-
 app.get("/playlists", (req, res) => {
   const allPlaylists = playlists.listPlaylists();
   res.json(allPlaylists);
