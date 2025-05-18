@@ -4,11 +4,13 @@ const songs = require("./songs");
 const playlists = require("./playlists");
 const genres = require("./genres");
 const artists = require("./artists");
+const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, "../public")));
 
 app.post("/songs", (req, res) => {
   const { title, artist, genre } = req.body;
