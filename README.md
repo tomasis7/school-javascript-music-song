@@ -1,29 +1,36 @@
-# Music Playlist App
+# Music Playlist Manager
 
 ## Overview
 
-The Music Playlist App is a JavaScript-based application designed to manage music playlists. Users can create, list, and manage playlists categorized by genre, artist, and songs. This application provides a simple and intuitive user interface for music enthusiasts to organize their favorite tracks.
+The Music Playlist Manager is a JavaScript-based web application that enables users to create, manage, and view playlists. The playlists are categorized by genre, artist, and song title, providing a user-friendly way to explore and organize music collections.
 
 ## Features
 
-- Create and manage playlists
-- Categorize music by genre and artist
-- Add, list, and delete songs
+- Create and manage playlists with custom names
+- View playlists with song counts and total duration
+- Filter and sort playlists by name or date created
+- Add songs with title, artist, and genre information
+- View songs grouped by genre, artist, or title alphabetically
+- Edit and delete songs and playlists
+- Add songs to specific playlists
 - Responsive and user-friendly UI
 
 ## Project Structure
 
 ```
-music-playlist-app
+music-playlist-manager
 ├── src
-│   ├── index.js        # Entry point of the application
+│   ├── index.js        # Express server and API endpoints
 │   ├── playlists.js    # Functions to manage playlists
 │   ├── genres.js       # Functions to manage music genres
 │   ├── artists.js      # Functions to manage artists
 │   └── songs.js        # Functions to manage songs
 ├── public
-│   ├── index.html      # Main HTML file for the application
-│   └── styles.css      # Styles for the application
+│   ├── index.html      # Main HTML interface
+│   ├── app.js          # Frontend JavaScript
+│   ├── styles.css      # CSS styles
+│   ├── songs.json      # JSON storage for songs
+│   └── playlists.json  # JSON storage for playlists
 ├── .gitignore          # Files and directories to ignore by Git
 ├── package.json        # npm configuration file
 ├── README.md           # Documentation for the project
@@ -37,7 +44,7 @@ music-playlist-app
    ```
 2. Navigate to the project directory:
    ```
-   cd music-playlist-app
+   cd school-javascript-music-song-1
    ```
 3. Install the dependencies:
    ```
@@ -46,36 +53,37 @@ music-playlist-app
 
 ## Usage
 
-1. Start the application with Vite:
+1. Start the application with:
    ```
-   npm run dev
+   npm run serve
    ```
-2. Open your browser and go to the local address shown in the terminal (usually `http://localhost:5173`) to access the application.
+2. Open your browser and go to `http://localhost:3000` to access the application.
 
-## Git Workflow
+## Application Features
 
-### Commit
+### Playlist Management
 
-After making your changes, commit them and push to the branch:
+- Create new playlists with custom names
+- View all playlists with song counts and duration information
+- Filter playlists using the search box
+- Sort playlists by name or date created
+- Edit playlist names with the edit button
+- Delete playlists with the delete button
 
-```
-git commit -m "Add your message"
-git push origin feature/your-feature-name
-```
+### Song Management
 
-### Creating a New Branch
+- Add songs by providing title, artist, and genre
+- View all available songs in the library
+- Group songs by genre, artist, or title alphabetically
+- Edit song details (title, artist, genre)
+- Delete songs from the library
+- Add existing songs to playlists
 
-To create a new branch, use:
+### Playlist View
 
-```
-git checkout -b branch-name
-```
-
-Example for a feature branch:
-
-```
-git checkout -b feature/your-feature-name
-```
+- Click on a playlist to view its contents
+- Songs in playlists are automatically grouped based on the selected grouping
+- Use the dropdown to switch between grouping by genre, artist, or title
 
 ### Switching Branches
 
@@ -87,11 +95,11 @@ git checkout branch-name
 
 ### Merging Branches
 
-To merge a branch (e.g., `feature/your-feature-name`) into `development`:
+To merge a branch (e.g., `feature/your-feature-name`) into `main`:
 
-1. Switch to the branch you want to merge into (e.g., `development`):
+1. Switch to the branch you want to merge into (e.g., `main`):
    ```
-   git checkout development
+   git checkout main
    ```
 2. Merge your feature branch:
    ```
@@ -122,7 +130,38 @@ If there are conflicts during a merge, Git will show an error and mark the confl
 
 > Tip: Use a visual tool like VS Code to easily view and resolve conflicts.
 
-See vscodeMerge.jpg in the main folder.
+## Development Guide
+
+### Creating a Feature Branch
+
+For each new feature, create a dedicated branch:
+
+```
+git checkout -b feature/feature-name
+```
+
+### Implementing Features
+
+1. Make your changes in the feature branch
+2. Test your changes thoroughly
+3. Commit your changes with a descriptive message:
+   ```
+   git commit -m "Add feature: detailed description"
+   ```
+4. Push your changes to the remote repository:
+   ```
+   git push origin feature/feature-name
+   ```
+
+### Merge Process
+
+After feature completion, merge it back to the main branch:
+
+```
+git checkout main
+git merge feature/feature-name
+git push origin main
+```
 
 ## License
 
