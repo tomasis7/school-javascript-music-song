@@ -24,7 +24,6 @@ app.post("/songs", (req, res) => {
 
   const song = songs.addSong(title, artist, genre);
 
-  // Persist updated list
   const filePath = path.join(__dirname, "../public/songs.json");
   fs.writeFile(filePath, JSON.stringify(songs.getSongs(), null, 2), (err) => {
     if (err) console.error("Failed to save songs file:", err);
@@ -163,14 +162,7 @@ app.put("/playlists/:name", (req, res) => {
 });
 
 app.get("/playlists", (req, res) => {
-  const filePath = path.join(__dirname, "../public/playlists.json");
-  fs.readFile(filePath, "utf-8", (err, data) => {
-    if (err) {
-      return res.status(500).json({ error: "Failed to read playlists file." });
-    }
-    const allPlaylists = JSON.parse(data);
-    res.json(allPlaylists);
-  });
+  res.json(playlists.listPlaylists());
 });
 
 app.get("/songs", (req, res) => {
