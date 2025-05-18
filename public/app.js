@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", () => {
   filterInput.addEventListener("input", refresh);
   sortSelect.addEventListener("change", refresh);
   refresh();
+
+  loadSongs();
 });
 
 function loadPlaylists(filter = "", sortKey = "name") {
@@ -215,15 +217,30 @@ document.getElementById("add-song").addEventListener("click", () => {
       return r.json();
     })
     .then((song) => {
-      const li = document.createElement("li");
-      li.textContent = `${song.title} – ${song.artist} [${song.genre}]`;
-      attachSongActions(li, song);
-      document.getElementById("song-list").appendChild(li);
+      const songList = document.getElementById("song-list");
+      const existingSongItem = Array.from(songList.children).find(
+        (li) =>
+          li.textContent.includes(song.title) &&
+          li.textContent.includes(song.artist)
+      );
+
+      if (!existingSongItem) {
+        const li = document.createElement("li");
+        li.textContent = `${song.title} – ${song.artist} [${song.genre}]`;
+        attachSongActions(li, song);
+        songList.appendChild(li);
+      } else {
+        alert(`Song "${song.title}" by "${song.artist}" already exists`);
+      }
+
       document.getElementById("song-title").value = "";
       document.getElementById("song-artist").value = "";
       document.getElementById("song-genre").value = "";
     })
-    .catch(console.error);
+    .catch((error) => {
+      console.error("Error adding song:", error);
+      alert("Failed to add song: " + error.message);
+    });
 });
 
 function loadDetails(playlistName) {
@@ -316,4 +333,24 @@ document.getElementById("group-by").addEventListener("change", function () {
 function handleFetchError(error, message = "Operation failed") {
   console.error(`${message}:`, error);
   alert(`${message}. Please try again.`);
+}
+
+function loadSongs() {
+  fetch("/songs")
+    .then((response) => response.json())
+    .then((songs) => {
+      const songList = document.getElementById("song-list");
+      songList.innerHTML = "";
+      songs.forEach((song) => {
+        const li = document.createElement("li");
+        li.textContent = `${song.title} – ${song.artist} [${song.genre}]`;
+        attachSongActions(li, song);
+        songList.appendChild(li);
+      });
+    })
+    .catch((error) => {
+      console.error("Error loading songs:", error);
+      document.getElementById("song-list").innerHTML =
+        "<li>Error loading songs</li>";
+    });
 }

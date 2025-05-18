@@ -17,6 +17,14 @@ function saveSongs() {
 }
 
 function addSong(title, artist, genre) {
+  const existingSong = songs.find(
+    (s) => s.title === title && s.artist === artist
+  );
+
+  if (existingSong) {
+    return existingSong;
+  }
+
   const song = { title, artist, genre };
   songs.push(song);
   saveSongs();

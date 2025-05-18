@@ -19,17 +19,7 @@ try {
 }
 
 function savePlaylists() {
-  const safeList = playlists.map((p) => ({
-    name: p.name,
-    songs: p.songs || [],
-    songCount: p.songs ? p.songs.length : 0,
-    totalDuration: p.songs
-      ? p.songs.reduce((sum, s) => sum + (s.duration || 0), 0)
-      : 0,
-    dateCreated: p.dateCreated,
-  }));
-
-  fs.writeFileSync(playlistsFilePath, JSON.stringify(safeList, null, 2));
+  fs.writeFileSync(playlistsFilePath, JSON.stringify(playlists, null, 2));
 }
 
 function createPlaylist(name) {

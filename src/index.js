@@ -22,6 +22,13 @@ app.post("/songs", (req, res) => {
       .json({ error: "Title, artist, and genre are required." });
   }
 
+  const existingSong = songs
+    .getSongs()
+    .find((s) => s.title === title && s.artist === artist);
+  if (existingSong) {
+    return res.status(200).json(existingSong);
+  }
+
   const song = songs.addSong(title, artist, genre);
 
   const filePath = path.join(__dirname, "../public/songs.json");
