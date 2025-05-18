@@ -146,20 +146,22 @@ app.put("/songs/:title", (req, res) => {
 
 app.put("/playlists/:name", (req, res) => {
   const { name } = req.params;
-  const { newName } = req.body;
-  if (!newName) return res.status(400).json({ error: "New name required." });
+  const { songs: newOrder } = req.body;
+  if (!Array.isArray(newOrder)) {
+    return res.status(400).json({ error: "songs array required" });
+  }
+  const pl = playlists.getPlaylist(name);
+  if (!pl) return res.status(404).json({ error: "Playlist not found." });
 
-  const updated = playlists.updatePlaylist(name, newName);
-  if (!updated) return res.status(404).json({ error: "Playlist not found." });
-
-  // Persist
+  pl.songs = newOrder;
+  // persist
   const fp = path.join(__dirname, "../public/playlists.json");
   fs.writeFile(
     fp,
     JSON.stringify(playlists.listPlaylists(), null, 2),
     () => {}
   );
-  res.json(updated);
+  res.json(pl);
 });
 
 app.get("/playlists", (req, res) => {

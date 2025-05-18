@@ -26,13 +26,11 @@ function loadPlaylists(filter = "", sortKey = "name") {
       list.forEach((pl) => {
         const li = document.createElement("li");
 
-        // create link to details page
         const link = document.createElement("a");
         link.href = `playlist.html?name=${encodeURIComponent(pl.name)}`;
         link.textContent = pl.name;
         link.style.marginRight = "8px";
 
-        // append link + info
         li.append(link, `(${pl.songCount} songs, ${pl.totalDuration} min)`);
         ul.appendChild(li);
       });
@@ -151,3 +149,36 @@ document.getElementById("add-song").addEventListener("click", () => {
     })
     .catch(console.error);
 });
+
+function loadDetails(playlistName) {
+  fetch(`/playlists/${encodeURIComponent(playlistName)}`)
+    .then((r) => r.json())
+    .then((pl) => {
+      document.getElementById("playlist-name").textContent = pl.name;
+      const ul = document.getElementById("song-list");
+      ul.innerHTML = "";
+      pl.songs.forEach((song) => {
+        const li = document.createElement("li");
+        li.textContent = `${song.title} by ${song.artist} (${song.genre})`;
+        attachSongActions(li, song);
+        ul.appendChild(li);
+      });
+
+      Sortable.create(ul, {
+        onEnd: () => {
+          const reordered = Array.from(ul.children).map((li) => {
+            const [title, rest] = li.textContent.split(" by ");
+            const [artist, genrePart] = rest.split(" (");
+            const genre = genrePart.slice(0, -1);
+            return { title, artist, genre };
+          });
+          fetch(`/playlists/${encodeURIComponent(pl.name)}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ songs: reordered }),
+          }).catch(console.error);
+        },
+      });
+    })
+    .catch(console.error);
+}
