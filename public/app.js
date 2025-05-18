@@ -23,15 +23,18 @@ function loadPlaylists(filter = "", sortKey = "name") {
 
       const ul = document.getElementById("playlist-list");
       ul.innerHTML = "";
+
       list.forEach((pl) => {
         const li = document.createElement("li");
+        li.textContent = `${pl.name} (${pl.songCount} songs, ${pl.totalDuration} min)`;
 
-        const link = document.createElement("a");
-        link.href = `playlist.html?name=${encodeURIComponent(pl.name)}`;
-        link.textContent = pl.name;
-        link.style.marginRight = "8px";
+        li.addEventListener("click", () => {
+          window.currentPlaylist = pl.name;
+          loadDetails(pl.name);
+        });
 
-        li.append(link, `(${pl.songCount} songs, ${pl.totalDuration} min)`);
+        attachPlaylistActions(li, pl);
+
         ul.appendChild(li);
       });
     });
@@ -68,9 +71,7 @@ function attachSongActions(li, song) {
 
   li.append(" ", edit, " ", del);
 
-  // Add playlist dropdown and button to assign this song to a playlist
   const playlistSelect = document.createElement("select");
-  // placeholder option
   const placeholderOpt = document.createElement("option");
   placeholderOpt.textContent = "-- select playlist --";
   placeholderOpt.disabled = true;
@@ -95,18 +96,26 @@ function attachSongActions(li, song) {
   addBtn.onclick = () => {
     const selected = playlistSelect.value;
     if (!selected) return alert("Please select a playlist.");
+
     fetch(`/playlists/${encodeURIComponent(selected)}/songs`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: song.title,
-        artist: song.artist,
-        genre: song.genre,
-      }),
+      body: JSON.stringify(song),
     })
       .then((r) => {
         if (!r.ok) throw new Error("Failed to add song to playlist");
+        return r.json();
+      })
+      .then(() => {
         alert(`"${song.title}" added to "${selected}"`);
+
+        const filterInput = document.getElementById("playlist-filter");
+        const sortSelect = document.getElementById("playlist-sort");
+        loadPlaylists(filterInput.value.trim(), sortSelect.value);
+
+        if (window.currentPlaylist === selected) {
+          loadDetails(selected);
+        }
       })
       .catch(console.error);
   };
@@ -196,34 +205,89 @@ document.getElementById("add-song").addEventListener("click", () => {
 });
 
 function loadDetails(playlistName) {
-  fetch(`/playlists/${encodeURIComponent(playlistName)}`)
-    .then((r) => r.json())
-    .then((pl) => {
-      document.getElementById("playlist-name").textContent = pl.name;
-      const ul = document.getElementById("song-list");
-      ul.innerHTML = "";
-      pl.songs.forEach((song) => {
-        const li = document.createElement("li");
-        li.textContent = `${song.title} by ${song.artist} (${song.genre})`;
-        attachSongActions(li, song);
-        ul.appendChild(li);
-      });
+  document.getElementById("title").textContent = playlistName;
+  const groupsDiv = document.getElementById("groups");
+  groupsDiv.innerHTML = "";
 
-      Sortable.create(ul, {
-        onEnd: () => {
-          const reordered = Array.from(ul.children).map((li) => {
-            const [title, rest] = li.textContent.split(" by ");
-            const [artist, genrePart] = rest.split(" (");
-            const genre = genrePart.slice(0, -1);
-            return { title, artist, genre };
-          });
-          fetch(`/playlists/${encodeURIComponent(pl.name)}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ songs: reordered }),
-          }).catch(console.error);
-        },
-      });
+  fetch("/playlists")
+    .then((r) => r.json())
+    .then((playlists) => {
+      const playlist = playlists.find((p) => p.name === playlistName);
+      if (!playlist) {
+        groupsDiv.innerHTML = "<p>Playlist not found</p>";
+        return;
+      }
+
+      fetch(`/playlists/${encodeURIComponent(playlistName)}/songs`)
+        .then((r) => r.json())
+        .then((songs) => {
+          displaySongsByGroup(songs, document.getElementById("group-by").value);
+        })
+        .catch((err) => {
+          console.error("Error loading playlist songs:", err);
+          groupsDiv.innerHTML = "<p>Error loading songs</p>";
+        });
     })
     .catch(console.error);
 }
+
+function displaySongsByGroup(songs, groupBy) {
+  const groupsDiv = document.getElementById("groups");
+  groupsDiv.innerHTML = "";
+
+  const groups = {};
+  songs.forEach((song) => {
+    const key = song[groupBy] || "Unknown";
+    if (!groups[key]) {
+      groups[key] = [];
+    }
+    groups[key].push(song);
+  });
+
+  const sortedKeys = Object.keys(groups).sort();
+
+  sortedKeys.forEach((key) => {
+    const groupSection = document.createElement("section");
+    groupSection.className = "song-group";
+
+    const groupTitle = document.createElement("h3");
+    groupTitle.textContent = key;
+    groupSection.appendChild(groupTitle);
+
+    const songsList = document.createElement("ul");
+    songsList.className = "songs-in-group";
+
+    groups[key]
+      .sort((a, b) => a.title.localeCompare(b.title))
+      .forEach((song) => {
+        const li = document.createElement("li");
+        li.textContent = `${song.title} – ${song.artist} [${song.genre}]`;
+        attachSongActions(li, song);
+        songsList.appendChild(li);
+      });
+
+    groupSection.appendChild(songsList);
+    groupsDiv.appendChild(groupSection);
+  });
+
+  if (window.Sortable) {
+    document.querySelectorAll(".songs-in-group").forEach((list) => {
+      new Sortable(list, {
+        animation: 150,
+        ghostClass: "sortable-ghost",
+        onEnd: function () {},
+      });
+    });
+  }
+}
+
+document.getElementById("group-by").addEventListener("change", function () {
+  if (window.currentPlaylist) {
+    fetch(`/playlists/${encodeURIComponent(window.currentPlaylist)}/songs`)
+      .then((r) => r.json())
+      .then((songs) => {
+        displaySongsByGroup(songs, this.value);
+      })
+      .catch(console.error);
+  }
+});
