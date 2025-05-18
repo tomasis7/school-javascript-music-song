@@ -21,8 +21,18 @@ function addSongToPlaylist(playlistName, song) {
   if (!playlist) {
     return null;
   }
+
   playlist.songs.push(song);
-  return playlist;
+
+  return {
+    name: playlist.name,
+    songCount: playlist.songs.length,
+    totalDuration: playlist.songs.reduce(
+      (sum, s) => sum + (s.duration || 0),
+      0
+    ),
+    songs: playlist.songs,
+  };
 }
 
 function removedSongFromPlaylist(playlistName, songTitle) {

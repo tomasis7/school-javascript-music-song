@@ -6,7 +6,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const refresh = () =>
     loadPlaylists(filterInput.value.trim(), sortSelect.value);
 
-  // Add the event listener for group-by changes
   groupBySelect.addEventListener("change", function () {
     currentGrouping = this.value;
     fetchAndDisplaySongs();
@@ -15,7 +14,6 @@ document.addEventListener("DOMContentLoaded", () => {
   filterInput.addEventListener("input", refresh);
   sortSelect.addEventListener("change", refresh);
 
-  // Load playlists and songs on page load
   refresh();
   fetchAndDisplaySongs();
 });
@@ -37,7 +35,9 @@ function loadPlaylists(filter = "", sortKey = "name") {
 
       list.forEach((pl) => {
         const li = document.createElement("li");
-        li.textContent = `${pl.name} (${pl.songCount} songs, ${pl.totalDuration} min)`;
+        li.textContent = `${pl.name} (${pl.songCount || 0} songs, ${
+          pl.totalDuration || 0
+        } min)`;
 
         li.addEventListener("click", () => {
           window.currentPlaylist = pl.name;
@@ -117,7 +117,7 @@ function attachSongActions(li, song) {
         if (!r.ok) throw new Error("Failed to add song to playlist");
         return r.json();
       })
-      .then(() => {
+      .then((updatedPlaylist) => {
         alert(`"${song.title}" added to "${selected}"`);
 
         const filterInput = document.getElementById("playlist-filter");
@@ -162,6 +162,8 @@ function attachPlaylistActions(li, pl) {
           window.currentPlaylist = upd.name;
           document.getElementById("title").textContent = upd.name;
         }
+
+        refreshAllPlaylistDropdowns();
       })
       .catch((err) => {
         console.error("Failed to update playlist:", err);
@@ -174,7 +176,10 @@ function attachPlaylistActions(li, pl) {
   del.onclick = () => {
     fetch(`/playlists/${encodeURIComponent(pl.name)}`, { method: "DELETE" })
       .then((r) => {
-        if (r.ok) li.remove();
+        if (r.ok) {
+          li.remove();
+          refreshAllPlaylistDropdowns();
+        }
       })
       .catch(console.error);
   };
@@ -201,6 +206,8 @@ document.getElementById("create-playlist").addEventListener("click", () => {
       li.textContent = `${pl.name} (0 songs)`;
       document.getElementById("playlist-list").appendChild(li);
       nameInput.value = "";
+
+      refreshAllPlaylistDropdowns();
     })
     .catch(console.error);
 });
@@ -276,7 +283,7 @@ document.getElementById("group-by").addEventListener("change", function () {
 });
 
 function fetchAndDisplaySongs() {
-  fetch("/songs") // Change from '/api/songs' to '/songs'
+  fetch("/songs")
     .then((response) => response.json())
     .then((songs) => {
       displaySongsByGroup(songs, currentGrouping);
@@ -343,7 +350,6 @@ function displaySongsByGroup(songs, groupBy) {
       const actionDiv = document.createElement("div");
       actionDiv.className = "song-actions";
 
-      // Create edit button
       const editBtn = document.createElement("button");
       editBtn.textContent = "✏️";
       editBtn.className = "edit-song";
@@ -364,7 +370,6 @@ function displaySongsByGroup(songs, groupBy) {
           .catch(console.error);
       };
 
-      // Create delete button
       const delBtn = document.createElement("button");
       delBtn.textContent = "🗑️";
       delBtn.className = "delete-song";
@@ -380,8 +385,8 @@ function displaySongsByGroup(songs, groupBy) {
         }
       };
 
-      // Create add to playlist select and button
       const playlistSelect = document.createElement("select");
+      playlistSelect.setAttribute("data-playlist-select", "true");
       const placeholderOpt = document.createElement("option");
       placeholderOpt.textContent = "-- Add to playlist --";
       placeholderOpt.disabled = true;
@@ -411,9 +416,17 @@ function displaySongsByGroup(songs, groupBy) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(song),
         })
-          .then((r) => r.json())
-          .then(() => {
+          .then((r) => {
+            if (!r.ok) throw new Error("Failed to add song to playlist");
+            return r.json();
+          })
+          .then((updatedPlaylist) => {
             alert(`"${song.title}" added to "${selected}"`);
+
+            const filterInput = document.getElementById("playlist-filter");
+            const sortSelect = document.getElementById("playlist-sort");
+            loadPlaylists(filterInput.value.trim(), sortSelect.value);
+
             if (window.currentPlaylist === selected) {
               loadDetails(selected);
             }
@@ -421,7 +434,6 @@ function displaySongsByGroup(songs, groupBy) {
           .catch(console.error);
       };
 
-      // Add all elements to the song item
       actionDiv.appendChild(editBtn);
       actionDiv.appendChild(delBtn);
       actionDiv.appendChild(playlistSelect);
@@ -435,3 +447,36 @@ function displaySongsByGroup(songs, groupBy) {
 }
 
 document.getElementById("song-list").innerHTML = "";
+
+function refreshAllPlaylistDropdowns() {
+  const playlistSelects = document.querySelectorAll(
+    'select[data-playlist-select="true"]'
+  );
+
+  fetch("/playlists")
+    .then((r) => r.json())
+    .then((playlists) => {
+      playlistSelects.forEach((select) => {
+        const currentValue = select.value;
+
+        while (select.options.length > 1) {
+          select.remove(1);
+        }
+
+        playlists.forEach((playlist) => {
+          const option = document.createElement("option");
+          option.value = playlist.name;
+          option.textContent = playlist.name;
+
+          if (currentValue === playlist.name) {
+            option.selected = true;
+          }
+
+          select.appendChild(option);
+        });
+      });
+    })
+    .catch((error) => {
+      console.error("Error refreshing playlist dropdowns:", error);
+    });
+}

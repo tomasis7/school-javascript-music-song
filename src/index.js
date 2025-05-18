@@ -67,7 +67,18 @@ app.post("/playlists/:name/songs", (req, res) => {
     return res.status(404).json({ error: "Playlist not found." });
   }
 
-  res.status(201).json(updatedPlaylist);
+  const fp = path.join(__dirname, "../public/playlists.json");
+  fs.writeFile(
+    fp,
+    JSON.stringify(playlists.listPlaylists(), null, 2),
+    (err) => {
+      if (err) {
+        console.error("Failed to save playlists:", err);
+        return res.status(500).json({ error: "Failed to save changes" });
+      }
+      res.status(201).json(updatedPlaylist);
+    }
+  );
 });
 
 app.post("/genres", (req, res) => {
