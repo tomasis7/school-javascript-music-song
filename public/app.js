@@ -67,6 +67,51 @@ function attachSongActions(li, song) {
   };
 
   li.append(" ", edit, " ", del);
+
+  // Add playlist dropdown and button to assign this song to a playlist
+  const playlistSelect = document.createElement("select");
+  // placeholder option
+  const placeholderOpt = document.createElement("option");
+  placeholderOpt.textContent = "-- select playlist --";
+  placeholderOpt.disabled = true;
+  placeholderOpt.selected = true;
+  playlistSelect.appendChild(placeholderOpt);
+
+  fetch("/playlists")
+    .then((r) => r.json())
+    .then((pls) => {
+      pls.forEach((pl) => {
+        const opt = document.createElement("option");
+        opt.value = pl.name;
+        opt.textContent = pl.name;
+        playlistSelect.appendChild(opt);
+      });
+    })
+    .catch(console.error);
+
+  const addBtn = document.createElement("button");
+  addBtn.textContent = "➕";
+  addBtn.title = "Add to playlist";
+  addBtn.onclick = () => {
+    const selected = playlistSelect.value;
+    if (!selected) return alert("Please select a playlist.");
+    fetch(`/playlists/${encodeURIComponent(selected)}/songs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: song.title,
+        artist: song.artist,
+        genre: song.genre,
+      }),
+    })
+      .then((r) => {
+        if (!r.ok) throw new Error("Failed to add song to playlist");
+        alert(`"${song.title}" added to "${selected}"`);
+      })
+      .catch(console.error);
+  };
+
+  li.append(" ", playlistSelect, " ", addBtn);
 }
 
 function attachPlaylistActions(li, pl) {
