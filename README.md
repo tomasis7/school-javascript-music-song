@@ -44,7 +44,7 @@ music-playlist-manager
    ```
 2. Navigate to the project directory:
    ```
-   cd school-javascript-music-song-1
+   cd school-javascript-music-song
    ```
 3. Install the dependencies:
    ```
@@ -155,12 +155,12 @@ git checkout -b feature/feature-name
 
 ### Merge Process
 
-After feature completion, merge it back to the main branch:
+After feature completion, merge it back to the development/main branch:
 
 ```
-git checkout main
+git checkout development
 git merge feature/feature-name
-git push origin main
+git push origin development
 ```
 
 ## License
