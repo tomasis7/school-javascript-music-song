@@ -21,7 +21,15 @@ app.post("/songs", (req, res) => {
       .status(400)
       .json({ error: "Title, artist, and genre are required." });
   }
+
   const song = songs.addSong(title, artist, genre);
+
+  // Persist updated list
+  const filePath = path.join(__dirname, "../public/songs.json");
+  fs.writeFile(filePath, JSON.stringify(songs.getSongs(), null, 2), (err) => {
+    if (err) console.error("Failed to save songs file:", err);
+  });
+
   res.status(201).json(song);
 });
 

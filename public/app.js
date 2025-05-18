@@ -46,3 +46,30 @@ document.getElementById("create-playlist").addEventListener("click", () => {
     })
     .catch((err) => console.error(err));
 });
+
+document.getElementById("add-song").addEventListener("click", () => {
+  const t = document.getElementById("song-title").value.trim();
+  const a = document.getElementById("song-artist").value.trim();
+  const g = document.getElementById("song-genre").value.trim();
+  if (!t || !a || !g) return alert("All fields required.");
+
+  fetch("/songs", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title: t, artist: a, genre: g }),
+  })
+    .then((r) => {
+      if (!r.ok) throw new Error("Failed to create song");
+      return r.json();
+    })
+    .then((song) => {
+      const li = document.createElement("li");
+      li.textContent = `${song.title} – ${song.artist} [${song.genre}]`;
+      document.getElementById("song-list").appendChild(li);
+      // clear inputs
+      document.getElementById("song-title").value = "";
+      document.getElementById("song-artist").value = "";
+      document.getElementById("song-genre").value = "";
+    })
+    .catch(console.error);
+});
