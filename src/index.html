@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Music Playlist App</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Music Playlist Manager</h1>
+    </header>
+    <main>
+      <section id="playlists">
+        <h2>Your Playlists</h2>
+        <ul id="playlist-list"></ul>
+        <input type="text" id="playlist-name" placeholder="New Playlist Name" />
+        <button id="create-playlist">Create Playlist</button>
+      </section>
+      <section id="music">
+        <h2>Manage Music</h2>
+        <div>
+          <h3>Add Song</h3>
+          <input type="text" id="song-title" placeholder="Song Title" />
+          <input type="text" id="song-artist" placeholder="Artist" />
+          <input type="text" id="song-genre" placeholder="Genre" />
+          <button id="add-song">Add Song</button>
+        </div>
+        <div>
+          <h3>Available Songs</h3>
+          <ul id="song-list"></ul>
+        </div>
+      </section>
+    </main>
+    <footer>
+      <p>&copy; 2025 Music Playlist App</p>
+    </footer>
+    <script src="../src/index.js"></script>
+  </body>
+</html>
