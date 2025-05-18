@@ -1,28 +1,95 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // Playlists
   fetch("/playlists")
-    .then((response) => response.json())
+    .then((r) => r.json())
     .then((playlists) => {
       const playlistList = document.getElementById("playlist-list");
       playlistList.innerHTML = "";
-      playlists.forEach((playlist) => {
+      playlists.forEach((pl) => {
         const li = document.createElement("li");
-        li.textContent = playlist.name;
+        li.textContent = pl.name;
+        attachPlaylistActions(li, pl); // ← add this
         playlistList.appendChild(li);
+      });
+    });
+
+  // Songs
+  fetch("/songs")
+    .then((r) => r.json())
+    .then((songs) => {
+      const songList = document.getElementById("song-list");
+      songList.innerHTML = "";
+      songs.forEach((song) => {
+        const li = document.createElement("li");
+        li.textContent = `${song.title} by ${song.artist} (${song.genre})`;
+        attachSongActions(li, song); // ← add this
+        songList.appendChild(li);
       });
     });
 });
 
-fetch("/songs")
-  .then((response) => response.json())
-  .then((songs) => {
-    const songList = document.getElementById("song-list");
-    songList.innerHTML = "";
-    songs.forEach((song) => {
-      const li = document.createElement("li");
-      li.textContent = `${song.title} by ${song.artist} (${song.genre})`;
-      songList.appendChild(li);
-    });
-  });
+function attachSongActions(li, song) {
+  const edit = document.createElement("button");
+  edit.textContent = "✏️";
+  edit.onclick = () => {
+    const title = prompt("New title:", song.title);
+    const artist = prompt("New artist:", song.artist);
+    const genre = prompt("New genre:", song.genre);
+    fetch(`/songs/${encodeURIComponent(song.title)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, artist, genre }),
+    })
+      .then((r) => r.json())
+      .then((upd) => {
+        li.firstChild.textContent = `${upd.title} by ${upd.artist} (${upd.genre})`;
+      })
+      .catch(console.error);
+  };
+
+  const del = document.createElement("button");
+  del.textContent = "🗑️";
+  del.onclick = () => {
+    fetch(`/songs/${encodeURIComponent(song.title)}`, { method: "DELETE" })
+      .then((r) => {
+        if (r.ok) li.remove();
+      })
+      .catch(console.error);
+  };
+
+  li.append(" ", edit, " ", del);
+}
+
+function attachPlaylistActions(li, pl) {
+  const edit = document.createElement("button");
+  edit.textContent = "✏️";
+  edit.onclick = () => {
+    const newName = prompt("Rename playlist:", pl.name);
+    fetch(`/playlists/${encodeURIComponent(pl.name)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ newName }),
+    })
+      .then((r) => r.json())
+      .then((upd) => {
+        li.firstChild.textContent = upd.name;
+        pl.name = upd.name;
+      })
+      .catch(console.error);
+  };
+
+  const del = document.createElement("button");
+  del.textContent = "🗑️";
+  del.onclick = () => {
+    fetch(`/playlists/${encodeURIComponent(pl.name)}`, { method: "DELETE" })
+      .then((r) => {
+        if (r.ok) li.remove();
+      })
+      .catch(console.error);
+  };
+
+  li.append(" ", edit, " ", del);
+}
 
 document.getElementById("create-playlist").addEventListener("click", () => {
   const nameInput = document.getElementById("playlist-name");
@@ -41,6 +108,7 @@ document.getElementById("create-playlist").addEventListener("click", () => {
     .then((playlist) => {
       const li = document.createElement("li");
       li.textContent = playlist.name;
+      attachPlaylistActions(li, playlist); // ← add this
       document.getElementById("playlist-list").appendChild(li);
       nameInput.value = "";
     })
@@ -65,6 +133,7 @@ document.getElementById("add-song").addEventListener("click", () => {
     .then((song) => {
       const li = document.createElement("li");
       li.textContent = `${song.title} – ${song.artist} [${song.genre}]`;
+      attachSongActions(li, song); // ← add this
       document.getElementById("song-list").appendChild(li);
       // clear inputs
       document.getElementById("song-title").value = "";

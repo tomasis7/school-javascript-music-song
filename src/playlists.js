@@ -37,10 +37,24 @@ function getSongsFromPlaylist(playlistId) {
   return playlist ? playlist.songs : null;
 }
 
+function deletePlaylist(name) {
+  const idx = playlists.findIndex((p) => p.name === name);
+  return idx > -1 ? playlists.splice(idx, 1)[0] : null;
+}
+
+function updatePlaylist(oldName, newName) {
+  const pl = playlists.find((p) => p.name === oldName);
+  if (!pl) return null;
+  pl.name = newName;
+  return pl;
+}
+
 module.exports = {
   createPlaylist,
   listPlaylists,
   addSongToPlaylist,
   removedSongFromPlaylist,
   getSongsFromPlaylist,
+  deletePlaylist,
+  updatePlaylist,
 };

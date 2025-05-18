@@ -111,6 +111,21 @@ app.delete("/playlists/:name/songs/:title", (req, res) => {
   res.json(removedSong);
 });
 
+app.delete("/playlists/:name", (req, res) => {
+  const { name } = req.params;
+  const removed = playlists.deletePlaylist(name);
+  if (!removed) return res.status(404).json({ error: "Playlist not found." });
+
+  // Persist
+  const fp = path.join(__dirname, "../public/playlists.json");
+  fs.writeFile(
+    fp,
+    JSON.stringify(playlists.listPlaylists(), null, 2),
+    () => {}
+  );
+  res.json(removed);
+});
+
 app.put("/songs/:title", (req, res) => {
   const { title } = req.params;
   const newDetails = req.body;
@@ -127,6 +142,24 @@ app.put("/songs/:title", (req, res) => {
   }
 
   res.json(updatedSong);
+});
+
+app.put("/playlists/:name", (req, res) => {
+  const { name } = req.params;
+  const { newName } = req.body;
+  if (!newName) return res.status(400).json({ error: "New name required." });
+
+  const updated = playlists.updatePlaylist(name, newName);
+  if (!updated) return res.status(404).json({ error: "Playlist not found." });
+
+  // Persist
+  const fp = path.join(__dirname, "../public/playlists.json");
+  fs.writeFile(
+    fp,
+    JSON.stringify(playlists.listPlaylists(), null, 2),
+    () => {}
+  );
+  res.json(updated);
 });
 
 app.get("/playlists", (req, res) => {
