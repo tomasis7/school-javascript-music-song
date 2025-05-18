@@ -97,25 +97,24 @@ function attachPlaylistActions(li, pl) {
 document.getElementById("create-playlist").addEventListener("click", () => {
   const nameInput = document.getElementById("playlist-name");
   const name = nameInput.value.trim();
-  if (!name) return alert("Please enter a playlist name.");
+  if (!name) return alert("Enter a name.");
 
   fetch("/playlists", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name }),
   })
-    .then((res) => {
-      if (!res.ok) throw new Error("Failed to create playlist");
-      return res.json();
+    .then((r) => {
+      if (!r.ok) throw new Error("Failed to create playlist");
+      return r.json();
     })
-    .then((playlist) => {
+    .then((pl) => {
       const li = document.createElement("li");
-      li.textContent = playlist.name;
-      attachPlaylistActions(li, playlist);
+      li.textContent = `${pl.name} (0 songs)`;
       document.getElementById("playlist-list").appendChild(li);
       nameInput.value = "";
     })
-    .catch((err) => console.error(err));
+    .catch(console.error);
 });
 
 document.getElementById("add-song").addEventListener("click", () => {

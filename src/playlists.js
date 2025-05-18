@@ -1,18 +1,18 @@
 const playlists = [];
 
 function createPlaylist(name) {
-  const playlist = { name, songs: [] };
-  playlists.push(playlist);
-  return playlist;
+  const now = new Date().toISOString();
+  const pl = { name, songs: [], createdAt: now };
+  playlists.push(pl);
+  return pl;
 }
 
 function listPlaylists() {
-  return playlists.map((pl) => ({
-    name: pl.name,
-    songs: pl.songs,
-    songCount: pl.songs.length,
-    totalDuration: pl.songs.reduce((sum, s) => sum + (s.duration || 0), 0),
-    dateCreated: pl.createdAt,
+  return playlists.map((p) => ({
+    name: p.name,
+    songCount: p.songs.length,
+    totalDuration: p.songs.reduce((sum, s) => sum + (s.duration || 0), 0),
+    dateCreated: p.createdAt,
   }));
 }
 
