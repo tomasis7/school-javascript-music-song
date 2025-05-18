@@ -25,7 +25,15 @@ function loadPlaylists(filter = "", sortKey = "name") {
       ul.innerHTML = "";
       list.forEach((pl) => {
         const li = document.createElement("li");
-        li.textContent = `${pl.name} (${pl.songCount} songs, ${pl.totalDuration} min)`;
+
+        // create link to details page
+        const link = document.createElement("a");
+        link.href = `playlist.html?name=${encodeURIComponent(pl.name)}`;
+        link.textContent = pl.name;
+        link.style.marginRight = "8px";
+
+        // append link + info
+        li.append(link, `(${pl.songCount} songs, ${pl.totalDuration} min)`);
         ul.appendChild(li);
       });
     });
