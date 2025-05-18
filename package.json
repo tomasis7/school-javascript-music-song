@@ -4,17 +4,12 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "vite",
-    "serve": "node src/index.js",
-    "start": "concurrently \"npm run serve\" \"npm run dev\"",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "devDependencies": {
-    "concurrently": "^9.1.2",
-    "vite": "^6.3.5"
+    "serve": "node src/index.js"
   },
   "dependencies": {
-    "express": "^5.1.0"
+    "body-parser": "^2.2.0",
+    "express": "^5.1.0",
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7"
   }
 }

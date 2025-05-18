@@ -5,8 +5,10 @@ const playlists = require("./playlists");
 const genres = require("./genres");
 const artists = require("./artists");
 const path = require("path");
+const fs = require("fs");
 
 const app = express();
+
 const PORT = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
@@ -112,13 +114,25 @@ app.put("/songs/:title", (req, res) => {
 });
 
 app.get("/playlists", (req, res) => {
-  const allPlaylists = playlists.listPlaylists();
-  res.json(allPlaylists);
+  const filePath = path.join(__dirname, "../public/playlists.json");
+  fs.readFile(filePath, "utf-8", (err, data) => {
+    if (err) {
+      return res.status(500).json({ error: "Failed to read playlists file." });
+    }
+    const allPlaylists = JSON.parse(data);
+    res.json(allPlaylists);
+  });
 });
 
 app.get("/songs", (req, res) => {
-  const allSongs = songs.getSongs();
-  res.json(allSongs);
+  const filePath = path.join(__dirname, "../public/songs.json");
+  fs.readFile(filePath, "utf-8", (err, data) => {
+    if (err) {
+      return res.status(500).json({ error: "Failed to read songs file." });
+    }
+    const allSongs = JSON.parse(data);
+    res.json(allSongs);
+  });
 });
 
 app.get("/playlists/:id/songs", (req, res) => {

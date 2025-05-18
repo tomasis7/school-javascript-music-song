@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  fetch("playlists.json")
+  fetch("/playlists")
     .then((response) => response.json())
     .then((playlists) => {
       const playlistList = document.getElementById("playlist-list");
@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-fetch("songs.json")
+fetch("/songs")
   .then((response) => response.json())
   .then((songs) => {
     const songList = document.getElementById("song-list");
