@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  fetch("/playlists")
+  fetch("playlists.json")
     .then((response) => response.json())
     .then((playlists) => {
       const playlistList = document.getElementById("playlist-list");
@@ -11,3 +11,15 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 });
+
+fetch("songs.json")
+  .then((response) => response.json())
+  .then((songs) => {
+    const songList = document.getElementById("song-list");
+    songList.innerHTML = "";
+    songs.forEach((song) => {
+      const li = document.createElement("li");
+      li.textContent = `${song.title} by ${song.artist} (${song.genre})`;
+      songList.appendChild(li);
+    });
+  });
