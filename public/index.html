@@ -13,6 +13,11 @@
     <main>
       <section id="playlists">
         <h2>Your Playlists</h2>
+        <input id="playlist-filter" placeholder="Filter playlists…" />
+        <select id="playlist-sort">
+          <option value="name">Name</option>
+          <option value="dateCreated">Date Created</option>
+        </select>
         <ul id="playlist-list"></ul>
         <input type="text" id="playlist-name" placeholder="New Playlist Name" />
         <button id="create-playlist">Create Playlist</button>

@@ -7,7 +7,13 @@ function createPlaylist(name) {
 }
 
 function listPlaylists() {
-  return playlists;
+  return playlists.map((pl) => ({
+    name: pl.name,
+    songs: pl.songs,
+    songCount: pl.songs.length,
+    totalDuration: pl.songs.reduce((sum, s) => sum + (s.duration || 0), 0),
+    dateCreated: pl.createdAt,
+  }));
 }
 
 function addSongToPlaylist(playlistName, song) {
@@ -28,8 +34,6 @@ function removedSongFromPlaylist(playlistName, songTitle) {
   if (songIndex === -1) {
     return null;
   }
-  // const removedSong = playlist.songs.splice(songIndex, 1);
-  // return removedSong[0];
 }
 
 function getSongsFromPlaylist(playlistId) {

@@ -1,32 +1,35 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Playlists
+  const filterInput = document.getElementById("playlist-filter");
+  const sortSelect = document.getElementById("playlist-sort");
+  const refresh = () =>
+    loadPlaylists(filterInput.value.trim(), sortSelect.value);
+
+  filterInput.addEventListener("input", refresh);
+  sortSelect.addEventListener("change", refresh);
+  refresh();
+});
+
+function loadPlaylists(filter = "", sortKey = "name") {
   fetch("/playlists")
     .then((r) => r.json())
-    .then((playlists) => {
-      const playlistList = document.getElementById("playlist-list");
-      playlistList.innerHTML = "";
-      playlists.forEach((pl) => {
-        const li = document.createElement("li");
-        li.textContent = pl.name;
-        attachPlaylistActions(li, pl); // ← add this
-        playlistList.appendChild(li);
-      });
-    });
+    .then((pls) => {
+      let list = pls;
+      if (filter) {
+        list = list.filter((pl) =>
+          pl.name.toLowerCase().includes(filter.toLowerCase())
+        );
+      }
+      list.sort((a, b) => (a[sortKey] > b[sortKey] ? 1 : -1));
 
-  // Songs
-  fetch("/songs")
-    .then((r) => r.json())
-    .then((songs) => {
-      const songList = document.getElementById("song-list");
-      songList.innerHTML = "";
-      songs.forEach((song) => {
+      const ul = document.getElementById("playlist-list");
+      ul.innerHTML = "";
+      list.forEach((pl) => {
         const li = document.createElement("li");
-        li.textContent = `${song.title} by ${song.artist} (${song.genre})`;
-        attachSongActions(li, song); // ← add this
-        songList.appendChild(li);
+        li.textContent = `${pl.name} (${pl.songCount} songs, ${pl.totalDuration} min)`;
+        ul.appendChild(li);
       });
     });
-});
+}
 
 function attachSongActions(li, song) {
   const edit = document.createElement("button");
@@ -108,7 +111,7 @@ document.getElementById("create-playlist").addEventListener("click", () => {
     .then((playlist) => {
       const li = document.createElement("li");
       li.textContent = playlist.name;
-      attachPlaylistActions(li, playlist); // ← add this
+      attachPlaylistActions(li, playlist);
       document.getElementById("playlist-list").appendChild(li);
       nameInput.value = "";
     })
@@ -133,9 +136,8 @@ document.getElementById("add-song").addEventListener("click", () => {
     .then((song) => {
       const li = document.createElement("li");
       li.textContent = `${song.title} – ${song.artist} [${song.genre}]`;
-      attachSongActions(li, song); // ← add this
+      attachSongActions(li, song);
       document.getElementById("song-list").appendChild(li);
-      // clear inputs
       document.getElementById("song-title").value = "";
       document.getElementById("song-artist").value = "";
       document.getElementById("song-genre").value = "";
