@@ -1,6 +1,9 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const songs = require("./songs");
+const playlists = require("./playlists");
+const genres = require("./genres");
+const artists = require("./artists");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -45,6 +48,29 @@ app.post("/playlists/:name/songs", (req, res) => {
   }
 
   res.status(201).json(updatedPlaylist);
+});
+
+app.post("/genres", (req, res) => {
+  const { genre } = req.body;
+  if (!genre) {
+    return res.status(400).json({ error: "Genre is required." });
+  }
+  const addedGenre = genres.addGenre(genre);
+  if (!addedGenre) {
+    return res.status(400).json({ error: "Genre already exists." });
+  }
+  res.status(201).json({ genre });
+});
+app.post("/artists", (req, res) => {
+  const { name } = req.body;
+  if (!name) {
+    return res.status(400).json({ error: "Artist name is required." });
+  }
+  const addedArtist = artists.addArtist(name);
+  if (!addedArtist) {
+    return res.status(400).json({ error: "Artist already exists." });
+  }
+  res.status(201).json(addedArtist);
 });
 
 app.delete("/songs/:title", (req, res) => {
@@ -102,6 +128,16 @@ app.get("/playlists/:id/songs", (req, res) => {
     return res.status(404).json({ error: "Playlist not found." });
   }
   res.json(songsInPlaylist);
+});
+
+app.get("/genres", (req, res) => {
+  const allGenres = genres.getGenres();
+  res.json(allGenres);
+});
+
+app.get("/artists", (req, res) => {
+  const allArtists = artists.getArtists();
+  res.json(allArtists);
 });
 
 app.listen(PORT, () => {
