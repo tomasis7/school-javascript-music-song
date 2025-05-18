@@ -31,6 +31,14 @@ app.post("/playlists", (req, res) => {
     return res.status(400).json({ error: "Playlist name is required." });
   }
   const playlist = playlists.createPlaylist(name);
+
+  const filePath = path.join(__dirname, "../public/playlists.json");
+  fs.writeFile(filePath, JSON.stringify(playlist), (err) => {
+    if (err) {
+      return res.status(500).json({ error: "Failed to save playlist." });
+    }
+  });
+
   res.status(201).json(playlist);
 });
 
