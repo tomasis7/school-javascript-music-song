@@ -53,21 +53,22 @@ app.post("/playlists", (req, res) => {
 app.post("/playlists/:name/songs", (req, res) => {
   const { name } = req.params;
   const { title, artist, genre } = req.body;
+  if (!title || !artist || !genre)
+    return res.status(400).json({ error: "All song fields required." });
 
-  if (!title || !artist || !genre) {
-    return res
-      .status(400)
-      .json({ error: "Title, artist, and genre are required." });
-  }
+  const song = playlists.addSongToPlaylist(name, { title, artist, genre });
+  if (!song) return res.status(404).json({ error: "Playlist not found." });
 
-  const song = { title, artist, genre };
-  const updatedPlaylist = playlists.addSongToPlaylist(name, song);
+  const fp = path.join(__dirname, "../public/playlists.json");
+  fs.writeFile(
+    fp,
+    JSON.stringify(playlists.listPlaylists(), null, 2),
+    (err) => {
+      if (err) console.error("Failed to save playlists:", err);
+    }
+  );
 
-  if (!updatedPlaylist) {
-    return res.status(404).json({ error: "Playlist not found." });
-  }
-
-  res.status(201).json(updatedPlaylist);
+  res.status(201).json(song);
 });
 
 app.post("/genres", (req, res) => {
@@ -116,7 +117,6 @@ app.delete("/playlists/:name", (req, res) => {
   const removed = playlists.deletePlaylist(name);
   if (!removed) return res.status(404).json({ error: "Playlist not found." });
 
-  // Persist
   const fp = path.join(__dirname, "../public/playlists.json");
   fs.writeFile(
     fp,

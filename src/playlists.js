@@ -16,13 +16,11 @@ function listPlaylists() {
   }));
 }
 
-function addSongToPlaylist(playlistName, song) {
-  const playlist = playlists.find((p) => p.name === playlistName);
-  if (!playlist) {
-    return null;
-  }
-  playlist.songs.push(song);
-  return playlist;
+function addSongToPlaylist(name, song) {
+  const pl = playlists.find((p) => p.name === name);
+  if (!pl) return null;
+  pl.songs.push(song);
+  return song;
 }
 
 function removedSongFromPlaylist(playlistName, songTitle) {

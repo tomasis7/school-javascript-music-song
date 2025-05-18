@@ -7,6 +7,39 @@ document.addEventListener("DOMContentLoaded", () => {
   filterInput.addEventListener("input", refresh);
   sortSelect.addEventListener("change", refresh);
   refresh();
+
+  const addBtn = document.getElementById("add-to-playlist");
+  if (addBtn) {
+    addBtn.addEventListener("click", () => {
+      const params = new URLSearchParams(window.location.search);
+      const name = params.get("name");
+      const title = document.getElementById("new-title").value.trim();
+      const artist = document.getElementById("new-artist").value.trim();
+      const genre = document.getElementById("new-genre").value.trim();
+      if (!title || !artist || !genre) return alert("All fields required.");
+
+      fetch(`/playlists/${encodeURIComponent(name)}/songs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, artist, genre }),
+      })
+        .then((r) => {
+          if (!r.ok) throw new Error("Failed to add song");
+          return r.json();
+        })
+        .then((song) => {
+          const li = document.createElement("li");
+          li.textContent = `${song.title} by ${song.artist} (${song.genre})`;
+          attachSongActions(li, song);
+          document.getElementById("song-list").appendChild(li);
+          // clear inputs
+          document.getElementById("new-title").value = "";
+          document.getElementById("new-artist").value = "";
+          document.getElementById("new-genre").value = "";
+        })
+        .catch(console.error);
+    });
+  }
 });
 
 function loadPlaylists(filter = "", sortKey = "name") {
