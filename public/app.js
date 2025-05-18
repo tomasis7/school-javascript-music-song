@@ -24,8 +24,12 @@ function loadPlaylists(filter = "", sortKey = "name") {
       const ul = document.getElementById("playlist-list");
       ul.innerHTML = "";
       list.forEach((pl) => {
+        const link = document.createElement("a");
+        link.href = `playlist.html?name=${encodeURIComponent(pl.name)}`;
+        link.textContent = pl.name;
         const li = document.createElement("li");
-        li.textContent = `${pl.name} (${pl.songCount} songs, ${pl.totalDuration} min)`;
+        li.append(link, ` (${pl.songCount} songs)`);
+        attachPlaylistActions(li, pl);
         ul.appendChild(li);
       });
     });
@@ -143,3 +147,45 @@ document.getElementById("add-song").addEventListener("click", () => {
     })
     .catch(console.error);
 });
+
+function loadDetails() {
+  const params = new URLSearchParams(location.search);
+  const name = params.get("name");
+  if (!name) return;
+
+  fetch(`/playlists/${encodeURIComponent(name)}`)
+    .then((r) => r.json())
+    .then((pl) => {
+      document.getElementById("title").textContent = pl.name;
+      const select = document.getElementById("group-by");
+      function render() {
+        const grpKey = select.value;
+        const groups = pl.songs.reduce((acc, s) => {
+          const key = s[grpKey];
+          (acc[key] = acc[key] || []).push(s);
+          return acc;
+        }, {});
+        const container = document.getElementById("groups");
+        container.innerHTML = "";
+        Object.entries(groups).forEach(([g, items]) => {
+          const h2 = document.createElement("h2");
+          h2.textContent = g;
+          const ul = document.createElement("ul");
+          items
+            .sort((a, b) => a.title.localeCompare(b.title))
+            .forEach((s) => {
+              const li = document.createElement("li");
+              li.textContent = `${s.title} by ${s.artist} (${s.genre})`;
+              ul.appendChild(li);
+            });
+          container.append(h2, ul);
+        });
+      }
+      select.addEventListener("change", render);
+      render();
+    });
+}
+
+if (location.pathname.endsWith("playlist.html")) {
+  document.addEventListener("DOMContentLoaded", loadDetails);
+}

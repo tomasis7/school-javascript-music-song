@@ -196,6 +196,13 @@ app.get("/artists", (req, res) => {
   res.json(allArtists);
 });
 
+app.get("/playlists/:name", (req, res) => {
+  const { name } = req.params;
+  const pl = playlists.getPlaylist(name);
+  if (!pl) return res.status(404).json({ error: "Playlist not found." });
+  res.json(pl);
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

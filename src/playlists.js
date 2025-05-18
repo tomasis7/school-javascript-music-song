@@ -53,6 +53,10 @@ function updatePlaylist(oldName, newName) {
   return pl;
 }
 
+function getPlaylist(name) {
+  return playlists.find((p) => p.name === name) || null;
+}
+
 module.exports = {
   createPlaylist,
   listPlaylists,
@@ -61,4 +65,5 @@ module.exports = {
   getSongsFromPlaylist,
   deletePlaylist,
   updatePlaylist,
+  getPlaylist,
 };
