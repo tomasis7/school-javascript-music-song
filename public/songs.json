@@ -1,7 +1,12 @@
 [
   {
-    "title": "kjhkj",
-    "artist": "kjhkjh",
-    "genre": "kjhkjhkj"
+    "title": "Song Title 1",
+    "artist": "Artist 1",
+    "genre": "Genre 1"
+  },
+  {
+    "title": "Song Title 2",
+    "artist": "Artist 2",
+    "genre": "Genre 2"
   }
 ]

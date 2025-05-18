@@ -6,7 +6,13 @@ const playlistsFilePath = path.join(__dirname, "../public/playlists.json");
 
 try {
   const data = fs.readFileSync(playlistsFilePath, "utf8");
-  playlists = JSON.parse(data);
+  const loadedPlaylists = JSON.parse(data);
+
+  // Make sure each playlist has a songs array
+  playlists = loadedPlaylists.map((pl) => ({
+    ...pl,
+    songs: pl.songs || [],
+  }));
 } catch (err) {
   console.error("Error loading playlists file:", err);
   playlists = [];
@@ -15,6 +21,7 @@ try {
 function savePlaylists() {
   const safeList = playlists.map((p) => ({
     name: p.name,
+    songs: p.songs || [],
     songCount: p.songs ? p.songs.length : 0,
     totalDuration: p.songs
       ? p.songs.reduce((sum, s) => sum + (s.duration || 0), 0)
@@ -42,6 +49,7 @@ function createPlaylist(name) {
 function listPlaylists() {
   return playlists.map((p) => ({
     name: p.name,
+    songs: p.songs || [],
     songCount: p.songs ? p.songs.length : 0,
     totalDuration: p.songs
       ? p.songs.reduce((sum, s) => sum + (s.duration || 0), 0)
@@ -83,7 +91,8 @@ function removedSongFromPlaylist(playlistName, songTitle) {
 
 function getSongsFromPlaylist(playlistName) {
   const playlist = playlists.find((p) => p.name === playlistName);
-  return playlist ? playlist.songs : null;
+  if (!playlist) return null;
+  return playlist.songs || [];
 }
 
 function deletePlaylist(name) {
